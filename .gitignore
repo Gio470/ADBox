@@ -1,0 +1,14 @@
+.gradle/
+.kotlin/
+build/
+**/build/
+local.properties
+*.jks
+*.keystore
+.idea/
+toolchain/
+
+
+app/src/main/assets/adbox-screen-server.jar
+app/src/main/assets/adbox-screen-server.jar.download
+.adbox-signing/

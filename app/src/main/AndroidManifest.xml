@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-feature android:name="android.hardware.usb.host" android:required="false"/>
+    <application android:name=".ADBoxApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:theme="@style/Theme.ADBox"
+        android:allowBackup="false" android:supportsRtl="true">
+        <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity>
+        <!-- Android permits connectedDevice FGS after UsbManager.requestPermission().
+             FastbootOperationService checks hasPermission on an attached USB device before
+             startForegroundService/startForeground; no network permissions are required.
+             Lint's manifest-only check cannot see this runtime USB alternative.
+             https://developer.android.com/develop/background-work/services/fgs/service-types#connected-device -->
+        <service android:name=".FastbootOperationService" android:exported="false" android:foregroundServiceType="connectedDevice"
+            tools:ignore="ForegroundServicePermission"/>
+    </application>
+</manifest>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ADBox</string>
+    <color name="adbox_icon_background">#FFFFFF</color>
+    <color name="adbox_icon_foreground">#A4DDBB</color>
+    <color name="adbox_icon_usb">#008B4D</color>
+    <item type="mipmap" name="ic_launcher_round">@mipmap/ic_launcher</item>
+</resources>

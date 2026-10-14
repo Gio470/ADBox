@@ -1,0 +1,64 @@
+name: ADBox CI
+on:
+  workflow_dispatch:
+  push:
+    paths: ['app/**', '*.gradle.kts', 'gradle.properties', 'scripts/**', 'tests/**', '.github/workflows/android.yml']
+concurrency:
+  group: adbox-ci
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+          cache-read-only: false
+      - name: Verify all eight protocol and output suites
+        run: java tests/CoreTest.java
+      - name: Prepare pinned USB screen server
+        run: bash scripts/prepare-screen-server.sh
+      - name: Compile, lint and test
+        run: gradle --no-daemon :app:assembleRelease :app:testReleaseUnitTest :app:lintRelease
+      - name: Verify unsigned APK contents
+        run: bash scripts/verify-apk.sh
+      - name: Sign and verify release APK
+        id: sign
+        env:
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+          RELEASE_PASSWORD: ${{ secrets.RELEASE_PASSWORD }}
+        run: |
+          if [[ -z "$RELEASE_KEYSTORE" || -z "$RELEASE_PASSWORD" ]]; then
+            echo '::warning::RELEASE_KEYSTORE/RELEASE_PASSWORD secrets are not set; publishing the unsigned APK only.'
+            exit 0
+          fi
+          bash scripts/sign-release.sh
+          echo signed=true >> "$GITHUB_OUTPUT"
+      - name: Upload signed APK
+        if: steps.sign.outputs.signed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ADBox-Android-APK
+          path: app/build/outputs/apk/release/adbox-release.apk
+      - name: Upload unsigned APK
+        if: steps.sign.outputs.signed != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ADBox-Android-Unsigned-APK
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
